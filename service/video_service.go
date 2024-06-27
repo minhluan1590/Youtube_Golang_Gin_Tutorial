@@ -4,7 +4,7 @@ import "github.com/minhluan1590/Youtube_Golang_Gin_Tutorial/entity"
 
 // VideoService defines the interface for video-related operations.
 type VideoService interface {
-	Save(video *entity.Video) error // Save a new video to the collection.
+	Save(video *entity.Video) error   // Save a new video to the collection.
 	FindAll() ([]entity.Video, error) // Retrieve all videos from the collection.
 }
 

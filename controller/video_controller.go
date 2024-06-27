@@ -5,6 +5,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/minhluan1590/Youtube_Golang_Gin_Tutorial/entity"
 	"github.com/minhluan1590/Youtube_Golang_Gin_Tutorial/service"
+	"github.com/go-playground/validator/v10"
+	"github.com/minhluan1590/Youtube_Golang_Gin_Tutorial/validators"
 )
 
 // VideoController defines the interface for video-related HTTP operations.
@@ -15,13 +17,17 @@ type VideoController interface {
 
 // videoController is a concrete implementation of the VideoController interface.
 type videoController struct {
-	service service.VideoService
+	service  service.VideoService
+	validate *validator.Validate
 }
 
 // NewVideoController creates a new instance of VideoController.
 func NewVideoController(service service.VideoService) VideoController {
+	validate := validator.New()
+	validate.RegisterValidation("is-cool", validators.ValidateIsCool)
 	return &videoController{
-		service: service,
+		service:  service,
+		validate: validate,
 	}
 }
 
@@ -29,11 +35,15 @@ func NewVideoController(service service.VideoService) VideoController {
 func (c *videoController) Save(ctx *gin.Context) {
 	var video entity.Video
 	if err := ctx.ShouldBindJSON(&video); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input. Please check your video data and try again.", "details": err.Error()})
+		return
+	}
+	if err := c.validate.Struct(video); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Validation failed. Please check your video data and try again.", "details": err.Error()})
 		return
 	}
 	if err := c.service.Save(&video); err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "An error occurred while saving the video. Please try again later."})
 		return
 	}
 	ctx.JSON(http.StatusCreated, video)
@@ -43,7 +53,7 @@ func (c *videoController) Save(ctx *gin.Context) {
 func (c *videoController) FindAll(ctx *gin.Context) {
 	videos, err := c.service.FindAll()
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "An error occurred while fetching the videos. Please try again later."})
 		return
 	}
 	ctx.JSON(http.StatusOK, videos)

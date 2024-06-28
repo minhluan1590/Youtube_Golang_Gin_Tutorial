@@ -2,9 +2,9 @@ package main
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/minhluan1590/Youtube_Golang_Gin_Tutorial/controller"
+	"github.com/minhluan1590/Youtube_Golang_Gin_Tutorial/controllers"
 	"github.com/minhluan1590/Youtube_Golang_Gin_Tutorial/middlewares"
-	"github.com/minhluan1590/Youtube_Golang_Gin_Tutorial/service"
+	"github.com/minhluan1590/Youtube_Golang_Gin_Tutorial/services"
 	gindump "github.com/tpkeeper/gin-dump"
 	"net/http"
 )
@@ -13,11 +13,11 @@ func main() {
 	r := gin.New()
 
 	// Add middlewares
-	r.Use(middlewares.Logger(), gin.Recovery(), middlewares.BasicAuth(), gindump.Dump())
+	r.Use(middlewares.Logger(), gin.Recovery(), gindump.Dump())
 
 	// Initialize services and controllers
-	videoService := service.NewVideoService()
-	videoController := controller.NewVideoController(videoService)
+	videoService := services.NewVideoService()
+	videoController := controllers.NewVideoController(videoService)
 
 	// Define routes
 	r.GET("/ping", func(c *gin.Context) {
@@ -26,8 +26,12 @@ func main() {
 		})
 	})
 
-	// API group
-	api := r.Group("/api")
+	r.POST("/login", func(c *gin.Context) {
+		middlewares.LoginHandler(c.Writer, c.Request)
+	})
+
+	// API group with JWT middleware
+	api := r.Group("/api", middlewares.JWTAuthMiddleware())
 	{
 		api.POST("/videos", videoController.Save)
 		api.GET("/videos", videoController.FindAll)

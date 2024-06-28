@@ -1,4 +1,4 @@
-package entity
+package models
 
 type Person struct {
 	FirstName string `json:"first_name" binding:"required,min=2,max=50" validate:"is-cool"`

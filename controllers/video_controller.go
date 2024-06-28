@@ -1,12 +1,12 @@
-package controller
+package controllers
 
 import (
-	"net/http"
 	"github.com/gin-gonic/gin"
-	"github.com/minhluan1590/Youtube_Golang_Gin_Tutorial/entity"
-	"github.com/minhluan1590/Youtube_Golang_Gin_Tutorial/service"
 	"github.com/go-playground/validator/v10"
+	"github.com/minhluan1590/Youtube_Golang_Gin_Tutorial/models"
+	"github.com/minhluan1590/Youtube_Golang_Gin_Tutorial/services"
 	"github.com/minhluan1590/Youtube_Golang_Gin_Tutorial/validators"
+	"net/http"
 )
 
 // VideoController defines the interface for video-related HTTP operations.
@@ -17,12 +17,12 @@ type VideoController interface {
 
 // videoController is a concrete implementation of the VideoController interface.
 type videoController struct {
-	service  service.VideoService
+	service  services.VideoService
 	validate *validator.Validate
 }
 
 // NewVideoController creates a new instance of VideoController.
-func NewVideoController(service service.VideoService) VideoController {
+func NewVideoController(service services.VideoService) VideoController {
 	validate := validator.New()
 	validate.RegisterValidation("is-cool", validators.ValidateIsCool)
 	return &videoController{
@@ -33,7 +33,7 @@ func NewVideoController(service service.VideoService) VideoController {
 
 // Save handles the HTTP request to save a new video.
 func (c *videoController) Save(ctx *gin.Context) {
-	var video entity.Video
+	var video models.Video
 	if err := ctx.ShouldBindJSON(&video); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input. Please check your video data and try again.", "details": err.Error()})
 		return
